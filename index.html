@@ -30,7 +30,7 @@
 
 html, body {
   height: 100%;
-  min-height: 760px; /* 强制撑开 iframe */
+  min-height: 760px;
   background: transparent;
   color: var(--cold-ink);
   font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
@@ -79,7 +79,7 @@ html, body {
   position: relative;
   width: 100%;
   max-width: 620px;
-  height: 100%; /* 占满 #init-app */
+  height: 100%;
   max-height: 800px;
   border-radius: 10px;
   border: 1px solid var(--cold-accent-d);
@@ -990,10 +990,11 @@ html, body {
   const ATTR_MAX = 8;
   const ATTR_MIN = 1;
 
-  const UID_剧情驱动 = 34;
-  const UID_沉浸驱动 = 35;
-  const UID_位面池 = 15;
-  const UID_身份池 = 16;
+  // 世界书目标条目 —— 按名字 includes 匹配
+  const WB_TARGETS = {
+    mode: ['剧情驱动', '沉浸驱动'],
+    pool: ['位面池', '身份池'],
+  };
 
   const $ = sel => document.querySelector(sel);
   const $$ = sel => document.querySelectorAll(sel);
@@ -1126,7 +1127,7 @@ html, body {
     if (!state.mode) {
       modeErr.textContent = '请选择叙事模式';
       modeErr.classList.add('show');
-    } else {
+    } else if (!modeErr.textContent.startsWith('世界书切换失败') && !modeErr.textContent.startsWith('开始失败')) {
       modeErr.classList.remove('show');
     }
 
@@ -1187,6 +1188,52 @@ html, body {
     state.gender = btn.dataset.gender;
   });
 
+  /* ================== 世界书适配层 ================== */
+  function TH() {
+    const th = window.TavernHelper;
+    if (!th) throw new Error('TavernHelper 不可用');
+    return th;
+  }
+
+  async function getPrimaryBookName() {
+    const th = TH();
+    let r = th.getCharWorldbookNames('current');
+    if (r && typeof r.then === 'function') r = await r;
+    const name = typeof r === 'string' ? r : r?.primary;
+    if (!name) throw new Error('角色卡未绑定主世界书');
+    return name;
+  }
+
+  async function applyEntries(predicate, enabled) {
+    const th = TH();
+    const book = await getPrimaryBookName();
+    await th.updateWorldbookWith(book, list =>
+      list.map(e => predicate(e) ? { ...e, enabled } : e)
+    );
+  }
+
+  const nameHit = (e, words) => words.some(w => String(e.name ?? '').includes(w));
+
+  async function switchNarrativeMode(targetMode) {
+    const target = WB_TARGETS.mode.find(w => targetMode.includes(w)) ?? targetMode;
+    await applyEntries(e => nameHit(e, [target]), true);
+    const others = WB_TARGETS.mode.filter(w => w !== target);
+    if (others.length) await applyEntries(e => nameHit(e, others), false);
+  }
+
+  async function switchPoolEntries(enable) {
+    await applyEntries(e => nameHit(e, WB_TARGETS.pool), enable);
+  }
+
+  function showLorebookError(err) {
+    const msg = '世界书切换失败：' + (err?.message || err?.toString?.() || '未知错误');
+    console.error('[init]', msg, err);
+    const a = document.querySelector('#mode-error');
+    if (a) { a.textContent = msg; a.classList.add('show'); }
+    const b = document.querySelector('#err-pool');
+    if (b) { b.textContent = msg; b.classList.add('show'); }
+  }
+
   $$('.mode-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (state.sending || state.done) return;
@@ -1201,62 +1248,13 @@ html, body {
         $$('.mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === newMode));
         $('#mode-error').classList.remove('show');
       } catch (err) {
-        console.warn('[init] switch mode failed', err);
-        const modeErr = $('#mode-error');
-        modeErr.textContent = '世界书切换失败，请重试';
-        modeErr.classList.add('show');
+        showLorebookError(err);
       } finally {
         $$('.mode-btn').forEach(b => b.style.pointerEvents = '');
         validateForm();
       }
     });
   });
-
-  async function switchNarrativeMode(targetMode) {
-    if (typeof getCharLorebooks !== 'function' ||
-        typeof getLorebookEntries !== 'function' ||
-        typeof replaceLorebookEntries !== 'function') {
-      throw new Error('lorebook API unavailable');
-    }
-    const books = await getCharLorebooks();
-    const bookName = books && books.primary;
-    if (!bookName) throw new Error('no primary worldbook');
-
-    const entries = await getLorebookEntries(bookName);
-    if (!Array.isArray(entries)) throw new Error('invalid entries');
-
-    const newEntries = entries.map(e => {
-      const uid = Number(e.uid);
-      if (uid === UID_剧情驱动) return { ...e, disable: targetMode !== '剧情驱动' };
-      if (uid === UID_沉浸驱动) return { ...e, disable: targetMode !== '沉浸驱动' };
-      return e;
-    });
-
-    await replaceLorebookEntries(bookName, newEntries);
-  }
-
-  async function switchPoolEntries(enable) {
-    if (typeof getCharLorebooks !== 'function' ||
-        typeof getLorebookEntries !== 'function' ||
-        typeof replaceLorebookEntries !== 'function') {
-      throw new Error('lorebook API unavailable');
-    }
-    const books = await getCharLorebooks();
-    const bookName = books && books.primary;
-    if (!bookName) throw new Error('no primary worldbook');
-
-    const entries = await getLorebookEntries(bookName);
-    if (!Array.isArray(entries)) throw new Error('invalid entries');
-
-    const newEntries = entries.map(e => {
-      const uid = Number(e.uid);
-      if (uid === UID_位面池) return { ...e, disable: !enable };
-      if (uid === UID_身份池) return { ...e, disable: !enable };
-      return e;
-    });
-
-    await replaceLorebookEntries(bookName, newEntries);
-  }
 
   $('#btn-lottery').addEventListener('click', () => {
     if (state.lottery || state.done) return;
@@ -1337,8 +1335,7 @@ html, body {
       $('#toggle-pool').classList.toggle('on', next);
       $('#err-pool').classList.remove('show');
     } catch (err) {
-      console.warn('[init] switch pool failed', err);
-      $('#err-pool').classList.add('show');
+      showLorebookError(err);
     } finally {
       $('#toggle-pool').style.pointerEvents = '';
     }
@@ -1428,32 +1425,49 @@ html, body {
     btn.textContent = '发送中…';
 
     try {
-      await waitGlobalInitialized('Mvu').catch(() => {});
+      const th = TH();
 
-      const mvuData = Mvu.getCurrentMvuData();
-      if (!mvuData) throw new Error('无法获取当前变量');
+      // 等 Mvu 就绪（优先全局，回退 TH 挂载）
+      if (typeof window.waitGlobalInitialized === 'function') {
+        await window.waitGlobalInitialized('Mvu').catch(() => {});
+      } else if (typeof th.waitGlobalInitialized === 'function') {
+        await th.waitGlobalInitialized('Mvu').catch(() => {});
+      }
+
+      const M = window.Mvu;
+      if (!M) throw new Error('Mvu 不可用');
+      if (typeof M.getMvuData !== 'function') throw new Error('Mvu.getMvuData 不可用');
+      if (typeof M.replaceMvuData !== 'function') throw new Error('Mvu.replaceMvuData 不可用');
+
+      // 消息 id 用 TH.getLastMessageId（不是 getCurrentMessageId）
+      const msgId = typeof th.getLastMessageId === 'function' ? th.getLastMessageId() : 'latest';
+
+      let data = await M.getMvuData({ type: 'message', message_id: msgId });
+      if (!data) data = await M.getMvuData({ type: 'message', message_id: 'latest' });
+      if (!data) throw new Error('无法获取当前 MVU 变量');
+
       const derived = computeDerived(state.attrs);
+      const R = 'stat_data.轮回者';
+      _.set(data, `${R}.姓名`, state.name);
+      _.set(data, `${R}.性别`, state.gender);
+      _.set(data, `${R}.五维`, { ...state.attrs });
+      _.set(data, `${R}._派生`, derived);
+      _.set(data, `${R}.当前HP`, derived.hp上限);
+      _.set(data, `${R}.当前MP`, derived.mp上限);
+      _.set(data, `${R}.当前SP`, derived.sp上限);
+      _.set(data, `${R}.当前SAN`, 100);
 
-      _.set(mvuData, 'stat_data.轮回者.姓名', state.name);
-      _.set(mvuData, 'stat_data.轮回者.性别', state.gender);
-      _.set(mvuData, 'stat_data.轮回者.五维', {
-        力量: state.attrs.力量,
-        敏捷: state.attrs.敏捷,
-        体质: state.attrs.体质,
-        智力: state.attrs.智力,
-        精神: state.attrs.精神,
-      });
-      _.set(mvuData, 'stat_data.轮回者._派生', derived);
-      _.set(mvuData, 'stat_data.轮回者.当前HP', derived.hp上限);
-      _.set(mvuData, 'stat_data.轮回者.当前MP', derived.mp上限);
-      _.set(mvuData, 'stat_data.轮回者.当前SP', derived.sp上限);
-      _.set(mvuData, 'stat_data.轮回者.当前SAN', 100);
+      await M.replaceMvuData(data, { type: 'message', message_id: msgId });
 
-      const mid = getCurrentMessageId();
-      await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: mid });
-
+      // 发送消息走 TH
       const template = buildTemplate();
-      await SillyTavern.sendMessage(template);
+      if (typeof th.createChatMessages !== 'function') {
+        throw new Error('TH.createChatMessages 不可用');
+      }
+      await th.createChatMessages([{ role: 'user', message: template }]);
+      if (typeof th.triggerSlash === 'function') {
+        await th.triggerSlash('/trigger');
+      }
 
       state.done = true;
       $('#init-panel').classList.add('done');
@@ -1464,6 +1478,11 @@ html, body {
       state.sending = false;
       btn.disabled = false;
       btn.textContent = '重试发送';
+      const a = document.querySelector('#mode-error');
+      if (a) {
+        a.textContent = '开始失败：' + (err?.message || err?.toString?.() || '未知错误');
+        a.classList.add('show');
+      }
     }
   }
 
