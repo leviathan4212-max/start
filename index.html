@@ -848,7 +848,7 @@ html, body {
             </div>
           </div>
           <div class="attrs-footer">
-            <div class="attrs-budget">已分配 <span class="num" id="attr-used">5</span> / 10</div>
+            <div class="attrs-budget">已分配 <span class="num" id="attr-used">0</span> / <span id="attr-budget">10</span>（基础值另计）</div>
             <button class="btn-random" id="btn-random">随机</button>
           </div>
         </div>
@@ -986,7 +986,10 @@ html, body {
   };
 
   const TOTAL_PAGES = 6;
+
+  // 可分配点数：不含基础值（5 个属性各 1 = 基础 5 点，额外 10 点自由分配）
   const ATTR_BUDGET = 10;
+  const ATTR_BASE = 5;
   const ATTR_MAX = 8;
   const ATTR_MIN = 1;
 
@@ -1087,6 +1090,10 @@ html, body {
     return Object.values(state.attrs).reduce((a, b) => a + b, 0);
   }
 
+  function attrUsed() {
+    return attrTotal() - ATTR_BASE;  // 已分配的可加点（不含基础 5 点）
+  }
+
   function goPage(index) {
     if (index < 0 || index >= TOTAL_PAGES) return;
     if (index > state.page && !canAdvance(state.page)) return;
@@ -1135,8 +1142,9 @@ html, body {
   }
 
   function updateAttrDisplay() {
-    const used = attrTotal();
+    const used = attrUsed();
     $('#attr-used').textContent = used;
+    $('#attr-budget').textContent = ATTR_BUDGET;
     $$('.attr-cell').forEach(cell => {
       const key = cell.dataset.attr;
       const v = state.attrs[key];
@@ -1155,7 +1163,7 @@ html, body {
     const key = cell.dataset.attr;
     const op = btn.dataset.op;
     if (op === 'plus') {
-      if (state.attrs[key] < ATTR_MAX && attrTotal() < ATTR_BUDGET) state.attrs[key]++;
+      if (state.attrs[key] < ATTR_MAX && attrUsed() < ATTR_BUDGET) state.attrs[key]++;
     } else {
       if (state.attrs[key] > ATTR_MIN) state.attrs[key]--;
     }
@@ -1165,7 +1173,7 @@ html, body {
   $('#btn-random').addEventListener('click', () => {
     const keys = ['力量','敏捷','体质','智力','精神'];
     const result = { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 };
-    let remaining = ATTR_BUDGET - 5;
+    let remaining = ATTR_BUDGET;  // 10 点自由分配（不含基础）
     while (remaining > 0) {
       const candidates = keys.filter(k => result[k] < ATTR_MAX);
       if (!candidates.length) break;
@@ -1439,11 +1447,10 @@ html, body {
       if (typeof M.getMvuData !== 'function') throw new Error('Mvu.getMvuData 不可用');
       if (typeof M.replaceMvuData !== 'function') throw new Error('Mvu.replaceMvuData 不可用');
 
-      // 消息 id 用 TH.getLastMessageId（不是 getCurrentMessageId）
-      const msgId = typeof th.getLastMessageId === 'function' ? th.getLastMessageId() : 'latest';
+      // 直接用 'latest'（避免 getLastMessageId 返回数组的兼容问题）
+      const msgId = 'latest';
 
       let data = await M.getMvuData({ type: 'message', message_id: msgId });
-      if (!data) data = await M.getMvuData({ type: 'message', message_id: 'latest' });
       if (!data) throw new Error('无法获取当前 MVU 变量');
 
       const derived = computeDerived(state.attrs);
