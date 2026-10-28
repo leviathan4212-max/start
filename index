@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万界迷途</title>
+<style>
+:root {
+  --cold-bg:      #e8ecf2;
+  --cold-bg-1:    #f0f3f8;
+  --cold-bg-2:    #dce1e9;
+  --cold-ink:     #1a2028;
+  --cold-ink-2:   #2f3a48;
+  --cold-muted:   #6a7480;
+  --cold-muted-2: #8f98a4;
+  --cold-accent:  #7a8fa6;
+  --cold-accent-d:#4a5f76;
+  --cold-accent-l:#a8b8c8;
+  --cold-line:    #c5cdd8;
+  --cold-line-2:  #b0bac7;
+  --cold-white:   #f8fafc;
+  --cold-shadow:  0 8px 24px rgba(30,40,55,0.12);
+  --cold-shadow-lg: 0 20px 50px rgba(20,28,40,0.25);
+  --q-普通: #8f98a4;
+  --q-精良: #5a7f9e;
+  --q-稀有: #6a6aa6;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: transparent;
+  color: var(--cold-ink);
+  font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.cold-marble {
+  background-color: var(--cold-bg);
+  background-image:
+    repeating-linear-gradient(115deg,
+      transparent 0px, transparent 45px,
+      rgba(120,140,160,0.05) 45px, rgba(120,140,160,0.05) 47px,
+      transparent 47px, transparent 110px),
+    radial-gradient(ellipse 800px 260px at 15% 25%, rgba(160,175,190,0.30), transparent 62%),
+    radial-gradient(ellipse 620px 380px at 85% 60%, rgba(140,155,175,0.24), transparent 58%),
+    radial-gradient(ellipse 520px 340px at 42% 88%, rgba(170,185,200,0.26), transparent 60%),
+    linear-gradient(135deg, #f0f3f8 0%, #e0e5ed 55%, #d8dee8 100%);
+}
+
+.cold-deep {
+  background-color: #1a2028;
+  background-image:
+    repeating-linear-gradient(115deg,
+      transparent 0px, transparent 60px,
+      rgba(168,184,200,0.06) 60px, rgba(168,184,200,0.06) 62px,
+      transparent 62px, transparent 130px),
+    radial-gradient(ellipse 700px 200px at 20% 50%, rgba(168,184,200,0.12), transparent 65%),
+    radial-gradient(ellipse 500px 260px at 82% 45%, rgba(168,184,200,0.09), transparent 60%),
+    linear-gradient(135deg, #1a2028 0%, #232c38 55%, #1a2028 100%);
+}
+
+#init-app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+#init-panel {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  height: 88vh;
+  max-height: 820px;
+  border-radius: 10px;
+  border: 1px solid var(--cold-accent-d);
+  box-shadow: 0 0 0 1px var(--cold-accent-l), var(--cold-shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#init-panel::before, #init-panel::after {
+  content: ''; position: absolute; width: 22px; height: 22px;
+  border: 1px solid var(--cold-accent); pointer-events: none; z-index: 5; opacity: 0.7;
+}
+#init-panel::before { top: 7px; left: 7px; border-right: none; border-bottom: none; }
+#init-panel::after  { bottom: 7px; right: 7px; border-left: none; border-top: none; }
+
+.pages-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  padding: 32px 28px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cold-line-2) transparent;
+}
+
+.page.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.page::-webkit-scrollbar { width: 6px; }
+.page::-webkit-scrollbar-thumb {
+  background: var(--cold-line-2);
+  border-radius: 3px;
+}
+
+.narration {
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.narration .line {
+  display: block;
+  color: var(--cold-accent-d);
+  opacity: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  margin-bottom: 2px;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateY(6px);
+}
+.page.active .narration .line {
+  opacity: 0.72;
+  transform: translateY(0);
+}
+.page.active .narration .line:nth-child(1) { transition-delay: 0.15s; }
+.page.active .narration .line:nth-child(2) { transition-delay: 0.55s; }
+.page.active .narration .line:nth-child(3) { transition-delay: 0.95s; }
+
+.title-page-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+.title-glow {
+  position: absolute;
+  width: 360px; height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(220,230,240,0.6) 40%, transparent 70%);
+  animation: breathe 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 0.95; }
+}
+.title-cloud {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.title-cloud svg {
+  position: absolute;
+  top: 50%;
+  left: -30%;
+  width: 160%;
+  opacity: 0.35;
+  animation: drift 40s linear infinite;
+}
+.title-cloud svg.slow { animation-duration: 60s; opacity: 0.22; top: 38%; }
+.title-cloud svg.fast { animation-duration: 28s; opacity: 0.28; top: 62%; }
+@keyframes drift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-30%); }
+}
+.title-name {
+  font-family: 'Georgia','Noto Serif SC',serif;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--cold-accent-d);
+  text-shadow: 0 0 20px rgba(122,143,166,0.35);
+  position: relative;
+  z-index: 3;
+  margin-left: 12px;
+}
+.title-sub {
+  font-family: 'Georgia',serif;
+  font-size: 11px;
+  letter-spacing: 8px;
+  color: var(--cold-accent);
+  margin-top: 16px;
+  position: relative;
+  z-index: 3;
+  opacity: 0.7;
+  margin-left: 8px;
+}
+
+.tower-page-inner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+.tower-text {
+  font-family: 'Georgia','Noto Serif SC',serif;
+  font-size: 14px;
+  line-height: 2.2;
+  color: var(--cold-ink-2);
+  letter-spacing: 1px;
+  text-align: center;
+  max-width: 440px;
+}
+.tower-text p { margin-bottom: 14px; }
+
+.form-block { margin-bottom: 18px; }
+.form-block-title {
+  font-family: 'Georgia','Noto Serif SC',serif;
+  font-size: 11px;
+  color: var(--cold-accent-d);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--cold-line);
+  margin-bottom: 12px;
+  position: relative;
+}
+.form-block-title::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0;
+  width: 32px; height: 2px; background: var(--cold-accent);
+}
+
+.field { margin-bottom: 14px; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  color: var(--cold-muted);
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+}
+.field-input, .field-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--cold-line);
+  border-radius: 3px;
+  color: var(--cold-ink);
+  transition: all 0.15s;
+}
+.field-input:focus, .field-textarea:focus {
+  outline: none;
+  border-color: var(--cold-accent);
+  box-shadow: 0 0 0 2px rgba(122,143,166,0.25);
+  background: rgba(255,255,255,0.95);
+}
+.field-textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+.gender-group { display: flex; gap: 8px; }
+.gender-btn {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  font-size: 12.5px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 2px;
+  border: 1px solid var(--cold-line);
+  border-radius: 3px;
+  background: rgba(255,255,255,0.5);
+  color: var(--cold-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.gender-btn:hover { border-color: var(--cold-accent-l); color: var(--cold-ink-2); }
+.gender-btn.selected {
+  background: linear-gradient(135deg, var(--cold-accent), var(--cold-accent-d));
+  color: #fff;
+  border-color: var(--cold-accent-d);
+  box-shadow: 0 2px 8px rgba(74,95,118,0.3);
+}
+
+.attrs-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+@media (max-width: 520px) {
+  .attrs-grid { grid-template-columns: repeat(3, 1fr); }
+  .attrs-grid .attr-cell:nth-child(4),
+  .attrs-grid .attr-cell:nth-child(5) { grid-column: span 1; }
+}
+.attr-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--cold-line);
+  border-radius: 3px;
+  gap: 4px;
+}
+.attr-cell .attr-name {
+  font-size: 10.5px;
+  color: var(--cold-muted);
+  letter-spacing: 1px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+}
+.attr-cell .attr-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.attr-cell .attr-val {
+  min-width: 26px;
+  text-align: center;
+  font-family: 'Georgia',monospace;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--cold-accent-d);
+}
+.attr-cell button {
+  width: 22px; height: 22px;
+  border: 1px solid var(--cold-line);
+  border-radius: 2px;
+  background: rgba(255,255,255,0.7);
+  color: var(--cold-accent-d);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: center; justify-content: center;
+}
+.attr-cell button:hover:not(:disabled) {
+  background: var(--cold-accent-l);
+  border-color: var(--cold-accent);
+}
+.attr-cell button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.attrs-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.attrs-budget {
+  color: var(--cold-muted);
+  font-family: 'Georgia',serif;
+  letter-spacing: 1px;
+}
+.attrs-budget .num { font-weight: 700; color: var(--cold-accent-d); font-size: 13px; }
+.btn-random {
+  padding: 5px 14px;
+  font-size: 11px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 2px;
+  border: 1px dashed var(--cold-accent-l);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--cold-accent-d);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-random:hover { background: rgba(122,143,166,0.1); border-color: var(--cold-accent); }
+
+.mode-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 14px 12px;
+  text-align: left;
+  border: 1.5px solid var(--cold-line);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.mode-btn:hover { border-color: var(--cold-accent-l); }
+.mode-btn.selected {
+  border-color: var(--cold-accent-d);
+  background: linear-gradient(135deg, rgba(200,215,230,0.6), rgba(168,184,200,0.4));
+  box-shadow: 0 3px 12px rgba(74,95,118,0.2);
+}
+.mode-btn.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px; right: 10px;
+  color: var(--cold-accent-d);
+  font-weight: 700;
+  font-size: 14px;
+}
+.mode-title {
+  font-family: 'Georgia','Noto Serif SC',serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cold-ink);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.mode-desc {
+  font-size: 11px;
+  color: var(--cold-muted);
+  line-height: 1.6;
+}
+.mode-note {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--cold-muted-2);
+  font-style: italic;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+.mode-error {
+  color: #b85d5d;
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 14px;
+  display: none;
+}
+.mode-error.show { display: block; }
+
+.lottery-area {
+  text-align: center;
+}
+.btn-lottery {
+  padding: 14px 32px;
+  font-size: 13px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 4px;
+  border: 1px solid var(--cold-accent-d);
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--cold-accent), var(--cold-accent-d));
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(74,95,118,0.3);
+}
+.btn-lottery:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(74,95,118,0.4);
+}
+.btn-lottery:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lottery-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+@media (max-width: 520px) {
+  .lottery-cards { grid-template-columns: 1fr; }
+}
+.lottery-card {
+  padding: 12px;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid var(--cold-line);
+  border-left: 3px solid var(--cold-muted-2);
+  border-radius: 3px;
+  text-align: left;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.lottery-card.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+.lottery-card.q-普通 { border-left-color: var(--q-普通); }
+.lottery-card.q-精良 { border-left-color: var(--q-精良); }
+.lottery-card.q-稀有 { border-left-color: var(--q-稀有); }
+
+.lottery-slot {
+  font-size: 10px;
+  color: var(--cold-muted);
+  letter-spacing: 2px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  margin-bottom: 6px;
+}
+.lottery-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.lottery-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: rgba(122,143,166,0.15);
+  color: var(--cold-accent-d);
+  border: 1px solid var(--cold-accent-l);
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 1px;
+}
+.lottery-tag.quality-普通 { background: rgba(143,152,164,0.18); color: var(--q-普通); border-color: rgba(143,152,164,0.4); }
+.lottery-tag.quality-精良 { background: rgba(90,127,158,0.18); color: var(--q-精良); border-color: rgba(90,127,158,0.4); }
+.lottery-tag.quality-稀有 { background: rgba(106,106,166,0.18); color: var(--q-稀有); border-color: rgba(106,106,166,0.4); }
+
+.lottery-pending {
+  font-size: 11px;
+  color: var(--cold-muted-2);
+  font-style: italic;
+}
+.lottery-result {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cold-ink);
+  font-family: 'Georgia','Noto Serif SC',serif;
+  display: none;
+}
+.lottery-result.show { display: block; }
+
+.subsection {
+  padding: 14px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--cold-line);
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+.subsection-title {
+  font-size: 11px;
+  color: var(--cold-accent-d);
+  letter-spacing: 2px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.choice-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.choice-btn {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 2px;
+  border: 1px solid var(--cold-line);
+  border-radius: 3px;
+  background: rgba(255,255,255,0.6);
+  color: var(--cold-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.choice-btn:hover { border-color: var(--cold-accent-l); color: var(--cold-ink-2); }
+.choice-btn.selected {
+  background: linear-gradient(135deg, var(--cold-accent), var(--cold-accent-d));
+  color: #fff;
+  border-color: var(--cold-accent-d);
+}
+.choice-content { display: none; margin-top: 8px; }
+.choice-content.show { display: block; }
+
+.result-box {
+  padding: 10px 12px;
+  background: rgba(122,143,166,0.1);
+  border: 1px solid var(--cold-accent-l);
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--cold-ink-2);
+}
+.result-box .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+.result-box .row .k { color: var(--cold-muted); }
+.result-box .row .v { font-weight: 700; color: var(--cold-accent-d); font-family: 'Georgia',serif; }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--cold-line);
+  margin-top: 4px;
+}
+.toggle-label {
+  font-size: 11.5px;
+  color: var(--cold-ink-2);
+  flex: 1;
+  padding-right: 12px;
+  line-height: 1.5;
+}
+.toggle-switch {
+  flex-shrink: 0;
+  position: relative;
+  width: 40px; height: 22px;
+  background: var(--cold-line-2);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on { background: var(--cold-accent-d); }
+.toggle-switch.on::after { transform: translateX(18px); }
+
+.preview-block {
+  padding: 12px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--cold-line);
+  border-left: 3px solid var(--cold-accent);
+  border-radius: 3px;
+  margin-bottom: 12px;
+}
+.preview-row {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  padding: 3px 0;
+  line-height: 1.6;
+}
+.preview-row .k {
+  color: var(--cold-muted);
+  min-width: 64px;
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.preview-row .v {
+  color: var(--cold-ink-2);
+  flex: 1;
+  word-break: break-word;
+}
+
+.page-nav {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 28px;
+  border-top: 1px solid var(--cold-line);
+  background: rgba(255,255,255,0.3);
+  gap: 12px;
+}
+.nav-btn {
+  padding: 9px 24px;
+  font-size: 12.5px;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  letter-spacing: 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--cold-line-2);
+  background: rgba(255,255,255,0.6);
+  color: var(--cold-ink-2);
+}
+.nav-btn:hover:not(:disabled) { border-color: var(--cold-accent); color: var(--cold-accent-d); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-btn.primary {
+  background: linear-gradient(135deg, var(--cold-accent), var(--cold-accent-d));
+  color: #fff;
+  border-color: var(--cold-accent-d);
+  box-shadow: 0 2px 8px rgba(74,95,118,0.28);
+}
+.nav-btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(74,95,118,0.4);
+}
+.nav-page-indicator {
+  font-family: 'Georgia',serif;
+  font-size: 11px;
+  color: var(--cold-muted);
+  letter-spacing: 2px;
+}
+
+.status-banner {
+  padding: 8px 16px;
+  text-align: center;
+  font-family: 'Georgia','Noto Serif SC',serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--cold-accent-d);
+  background: rgba(122,143,166,0.15);
+  border-bottom: 1px solid var(--cold-accent-l);
+  display: none;
+}
+.status-banner.show { display: block; }
+
+#init-panel.done .pages-wrap,
+#init-panel.done .page-nav { opacity: 0.55; pointer-events: none; }
+
+.field-error {
+  color: #b85d5d;
+  font-size: 11px;
+  margin-top: 4px;
+  display: none;
+}
+.field-error.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="init-app">
+  <div id="init-panel" class="cold-marble">
+    <div class="status-banner" id="status-banner">轮回已开始</div>
+    <div class="pages-wrap" id="pages-wrap">
+
+      <div class="page active" data-page="0">
+        <div class="title-page-inner">
+          <div class="title-glow"></div>
+          <div class="title-cloud">
+            <svg viewBox="0 0 800 100" preserveAspectRatio="none">
+              <ellipse cx="200" cy="50" rx="120" ry="28" fill="rgba(200,215,235,0.5)"/>
+              <ellipse cx="320" cy="45" rx="100" ry="22" fill="rgba(200,215,235,0.4)"/>
+              <ellipse cx="560" cy="55" rx="140" ry="26" fill="rgba(200,215,235,0.45)"/>
+            </svg>
+            <svg class="slow" viewBox="0 0 800 100" preserveAspectRatio="none">
+              <ellipse cx="150" cy="50" rx="160" ry="24" fill="rgba(210,225,245,0.4)"/>
+              <ellipse cx="480" cy="48" rx="180" ry="22" fill="rgba(210,225,245,0.35)"/>
+            </svg>
+            <svg class="fast" viewBox="0 0 800 100" preserveAspectRatio="none">
+              <ellipse cx="350" cy="50" rx="130" ry="20" fill="rgba(220,230,245,0.35)"/>
+            </svg>
+          </div>
+          <div class="title-name">万界迷途</div>
+          <div class="title-sub">THE LOST ONE</div>
+        </div>
+      </div>
+
+      <div class="page" data-page="1">
+        <div class="narration">
+          <span class="line">白。没有边界，没有温度。</span>
+          <span class="line">你站在这里，脚下是看不见的地面。</span>
+          <span class="line">一个声音没有响起，它直接出现在你的意识里。</span>
+        </div>
+        <div class="tower-page-inner">
+          <div class="tower-text">
+            <p>没有天空，没有墙壁。<br>只有一片没有尽头的白色。</p>
+            <p>你低头看自己的手，是真实的。<br>你试着回想自己是怎么来到这里的，<br>记忆在某一点断开。</p>
+            <p>那块半透明的面板悬浮在你面前。<br>它没有问你是谁。<br>它只是开始读取。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" data-page="2">
+        <div class="narration">
+          <span class="line">身份登记。请提供姓名。</span>
+        </div>
+
+        <div class="form-block">
+          <div class="form-block-title">IDENTITY</div>
+
+          <div class="field">
+            <label class="field-label">姓名</label>
+            <input type="text" class="field-input" id="in-name" placeholder="" maxlength="20" autocomplete="off">
+            <div class="field-error" id="err-name">请输入姓名</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">性别</label>
+            <div class="gender-group" id="gender-group">
+              <div class="gender-btn selected" data-gender="男">男</div>
+              <div class="gender-btn" data-gender="女">女</div>
+              <div class="gender-btn" data-gender="其他">其他</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">外貌</label>
+            <textarea class="field-textarea" id="in-appearance" placeholder="" maxlength="200"></textarea>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="form-block-title">ATTRIBUTES</div>
+          <div class="attrs-grid" id="attrs-grid">
+            <div class="attr-cell" data-attr="力量">
+              <div class="attr-name">力量</div>
+              <div class="attr-controls">
+                <button data-op="minus">−</button>
+                <span class="attr-val">1</span>
+                <button data-op="plus">+</button>
+              </div>
+            </div>
+            <div class="attr-cell" data-attr="敏捷">
+              <div class="attr-name">敏捷</div>
+              <div class="attr-controls">
+                <button data-op="minus">−</button>
+                <span class="attr-val">1</span>
+                <button data-op="plus">+</button>
+              </div>
+            </div>
+            <div class="attr-cell" data-attr="体质">
+              <div class="attr-name">体质</div>
+              <div class="attr-controls">
+                <button data-op="minus">−</button>
+                <span class="attr-val">1</span>
+                <button data-op="plus">+</button>
+              </div>
+            </div>
+            <div class="attr-cell" data-attr="智力">
+              <div class="attr-name">智力</div>
+              <div class="attr-controls">
+                <button data-op="minus">−</button>
+                <span class="attr-val">1</span>
+                <button data-op="plus">+</button>
+              </div>
+            </div>
+            <div class="attr-cell" data-attr="精神">
+              <div class="attr-name">精神</div>
+              <div class="attr-controls">
+                <button data-op="minus">−</button>
+                <span class="attr-val">1</span>
+                <button data-op="plus">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="attrs-footer">
+            <div class="attrs-budget">已分配 <span class="num" id="attr-used">5</span> / 10</div>
+            <button class="btn-random" id="btn-random">随机</button>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="form-block-title">NARRATIVE MODE</div>
+          <div class="mode-row">
+            <div class="mode-btn" data-mode="剧情驱动">
+              <div class="mode-title">剧情驱动</div>
+              <div class="mode-desc">你将会被卷入与位面紧密相关的各类事件中，适合只想要体验剧情的玩家。</div>
+            </div>
+            <div class="mode-btn" data-mode="沉浸驱动">
+              <div class="mode-title">沉浸驱动</div>
+              <div class="mode-desc">你将会在位面中自由探索、生活、受苦，适合想要沉浸体验世界的玩家。</div>
+            </div>
+          </div>
+          <div class="mode-note">注：两种模式只会影响 AI 的叙事偏好。</div>
+          <div class="mode-error" id="mode-error"></div>
+        </div>
+      </div>
+
+      <div class="page" data-page="3">
+        <div class="narration">
+          <span class="line">物资配给。请领取。</span>
+        </div>
+
+        <div class="lottery-area">
+          <button class="btn-lottery" id="btn-lottery">执行配给</button>
+          <div class="lottery-cards" id="lottery-cards">
+            <div class="lottery-card" data-slot="weapon">
+              <div class="lottery-slot">武器</div>
+              <div class="lottery-tags"></div>
+              <div class="lottery-pending">待配给</div>
+              <div class="lottery-result"></div>
+            </div>
+            <div class="lottery-card" data-slot="consumable">
+              <div class="lottery-slot">消耗品</div>
+              <div class="lottery-tags"></div>
+              <div class="lottery-pending">待配给</div>
+              <div class="lottery-result"></div>
+            </div>
+            <div class="lottery-card" data-slot="skill">
+              <div class="lottery-slot">永久技能</div>
+              <div class="lottery-tags"></div>
+              <div class="lottery-pending">待配给</div>
+              <div class="lottery-result"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" data-page="4">
+        <div class="narration">
+          <span class="line">位面分配。随机执行。</span>
+        </div>
+
+        <div class="subsection" data-section="plane">
+          <div class="subsection-title">位面</div>
+          <div class="choice-row">
+            <div class="choice-btn selected" data-choice="plane" data-value="draw">抽取</div>
+            <div class="choice-btn" data-choice="plane" data-value="input">输入</div>
+          </div>
+          <div class="choice-content show" data-content="plane-draw">
+            <button class="nav-btn primary" id="btn-draw-plane" style="width:100%;">执行分配</button>
+            <div class="result-box" id="plane-result" style="display:none;margin-top:10px;">
+              <div class="row"><span class="k">世界观轴</span><span class="v" id="plane-worldview">—</span></div>
+              <div class="row"><span class="k">媒介轴</span><span class="v" id="plane-medium">—</span></div>
+            </div>
+          </div>
+          <div class="choice-content" data-content="plane-input">
+            <input type="text" class="field-input" id="in-plane-name" placeholder="输入具体作品名" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="subsection" data-section="identity">
+          <div class="subsection-title">身份</div>
+          <div class="choice-row">
+            <div class="choice-btn selected" data-choice="identity" data-value="draw">抽取</div>
+            <div class="choice-btn" data-choice="identity" data-value="input">输入</div>
+          </div>
+          <div class="choice-content show" data-content="identity-draw">
+            <button class="nav-btn primary" id="btn-draw-identity" style="width:100%;">执行分配</button>
+            <div class="result-box" id="identity-result" style="display:none;margin-top:10px;">
+              <div class="row"><span class="k">社会地位</span><span class="v" id="identity-status">—</span></div>
+              <div class="row"><span class="k">天赋</span><span class="v" id="identity-talent">—</span></div>
+            </div>
+          </div>
+          <div class="choice-content" data-content="identity-input">
+            <input type="text" class="field-input" id="in-identity-name" placeholder="输入身份描述" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-label">启用位面池与身份池条目（影响之后的位面选择）</div>
+          <div class="toggle-switch" id="toggle-pool"></div>
+        </div>
+        <div class="field-error" id="err-pool">世界书切换失败，请重试或手动在 ST 世界书面板中启用对应条目</div>
+      </div>
+
+      <div class="page" data-page="5">
+        <div class="narration">
+          <span class="line">传送准备。等待确认。</span>
+        </div>
+
+        <div id="preview-container"></div>
+      </div>
+
+    </div>
+
+    <div class="page-nav">
+      <button class="nav-btn" id="btn-prev" disabled>上一页</button>
+      <div class="nav-page-indicator" id="page-indicator">1 / 6</div>
+      <button class="nav-btn primary" id="btn-next">下一页</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const state = {
+    page: 0,
+    name: '',
+    gender: '男',
+    appearance: '',
+    attrs: { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 },
+    mode: '',
+    lottery: null,
+    plane: { choice: 'draw', worldview: '', medium: '', name: '' },
+    identity: { choice: 'draw', status: '', talent: '', name: '' },
+    poolEnabled: false,
+    sending: false,
+    done: false,
+  };
+
+  const TOTAL_PAGES = 6;
+  const ATTR_BUDGET = 10;
+  const ATTR_MAX = 8;
+  const ATTR_MIN = 1;
+
+  const UID_剧情驱动 = 34;
+  const UID_沉浸驱动 = 35;
+  const UID_位面池 = 15;
+  const UID_身份池 = 16;
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => document.querySelectorAll(sel);
+
+  function d20() { return Math.floor(Math.random() * 20) + 1; }
+  function toNum(v, def) { const n = Number(v); return Number.isFinite(n) ? n : (def ?? 0); }
+
+  function qualityByRoll(r) {
+    if (r <= 10) return '普通';
+    if (r <= 17) return '精良';
+    return '稀有';
+  }
+  function typeByRoll(r) {
+    if (r <= 4) return '魔法/奇幻';
+    if (r <= 8) return '科技/科幻';
+    if (r <= 12) return '武侠/仙侠';
+    if (r <= 16) return '现代/现实';
+    return '神话/传说';
+  }
+  function skillLevelByQuality(q) {
+    return q === '普通' ? '一级' : q === '精良' ? '二级' : '三级';
+  }
+  function worldviewByRoll(r) {
+    if (r <= 2) return '现代现实';
+    if (r <= 5) return '现代奇幻';
+    if (r <= 9) return '仙侠';
+    if (r <= 14) return '西幻';
+    if (r <= 17) return '未来科幻';
+    if (r <= 19) return '历史';
+    return '末世废土';
+  }
+  function mediumByRoll(r) {
+    if (r <= 6) return '动画';
+    if (r <= 12) return '游戏';
+    if (r <= 16) return '漫画';
+    if (r <= 19) return '轻小说';
+    return '电影或其他';
+  }
+  function identityStatusByRoll(r) {
+    if (r <= 3) return '底层';
+    if (r <= 11) return '普通';
+    if (r <= 17) return '中上';
+    return '上层';
+  }
+  function identityTalentByRoll(r) {
+    if (r <= 3) return '极差';
+    if (r <= 11) return '普通';
+    if (r <= 17) return '优秀';
+    return '天才';
+  }
+
+  function computeRankByLv(lv) {
+    if (lv <= 15) return '凡人';
+    if (lv <= 30) return '精锐';
+    if (lv <= 50) return '勇者';
+    if (lv <= 75) return '英雄';
+    if (lv <= 100) return '半神';
+    return '神祇';
+  }
+  function hpMaxByCon(con) {
+    if (con <= 30) return 150 * con;
+    if (con <= 60) return 4500 + 100 * (con - 30);
+    return 7500 + 60 * (con - 60);
+  }
+  function computeDerived(attrs) {
+    const str = Math.max(1, Math.floor(toNum(attrs.力量, 1)));
+    const agi = Math.max(1, Math.floor(toNum(attrs.敏捷, 1)));
+    const con = Math.max(1, Math.floor(toNum(attrs.体质, 1)));
+    const int_ = Math.max(1, Math.floor(toNum(attrs.智力, 1)));
+    const spi = Math.max(1, Math.floor(toNum(attrs.精神, 1)));
+    const lv = str + agi + con + int_ + spi;
+    return {
+      lv,
+      位阶: computeRankByLv(lv),
+      hp上限: hpMaxByCon(con),
+      mp上限: (int_ + spi) * 30,
+      sp上限: (con + agi) * 15,
+      护甲总值: 0,
+      修正: {
+        力量: Math.floor(str / 3),
+        敏捷: Math.floor(agi / 3),
+        体质: Math.floor(con / 3),
+        智力: Math.floor(int_ / 3),
+        精神: Math.floor(spi / 3),
+      },
+    };
+  }
+
+  function attrTotal() {
+    return Object.values(state.attrs).reduce((a, b) => a + b, 0);
+  }
+
+  function goPage(index) {
+    if (index < 0 || index >= TOTAL_PAGES) return;
+    if (index > state.page && !canAdvance(state.page)) return;
+    state.page = index;
+    $$('.page').forEach(p => p.classList.toggle('active', Number(p.dataset.page) === index));
+    $('#btn-prev').disabled = index === 0 || state.done;
+    $('#btn-next').disabled = index === TOTAL_PAGES - 1 || state.done;
+    $('#btn-next').textContent = index === TOTAL_PAGES - 2 ? '前往确认' : '下一页';
+    $('#page-indicator').textContent = (index + 1) + ' / ' + TOTAL_PAGES;
+
+    if (index === TOTAL_PAGES - 1) renderPreview();
+    if (index === 2) validateForm();
+  }
+
+  function canAdvance(page) {
+    if (page === 2) {
+      validateForm();
+      return !!state.name && !!state.mode;
+    }
+    if (page === 3) return !!state.lottery;
+    if (page === 4) {
+      if (state.plane.choice === 'draw' && !state.plane.worldview) return false;
+      if (state.plane.choice === 'input' && !state.plane.name.trim()) return false;
+      if (state.identity.choice === 'draw' && !state.identity.status) return false;
+      if (state.identity.choice === 'input' && !state.identity.name.trim()) return false;
+      return true;
+    }
+    return true;
+  }
+
+  function validateForm() {
+    const name = $('#in-name').value.trim();
+    state.name = name;
+    state.appearance = $('#in-appearance').value.trim();
+    $('#err-name').classList.toggle('show', !name);
+
+    const modeErr = $('#mode-error');
+    if (!state.mode) {
+      modeErr.textContent = '请选择叙事模式';
+      modeErr.classList.add('show');
+    } else {
+      modeErr.classList.remove('show');
+    }
+
+    updateAttrDisplay();
+  }
+
+  function updateAttrDisplay() {
+    const used = attrTotal();
+    $('#attr-used').textContent = used;
+    $$('.attr-cell').forEach(cell => {
+      const key = cell.dataset.attr;
+      const v = state.attrs[key];
+      cell.querySelector('.attr-val').textContent = v;
+      const minus = cell.querySelector('[data-op="minus"]');
+      const plus = cell.querySelector('[data-op="plus"]');
+      minus.disabled = v <= ATTR_MIN;
+      plus.disabled = v >= ATTR_MAX || used >= ATTR_BUDGET;
+    });
+  }
+
+  $('#attrs-grid').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn || btn.disabled) return;
+    const cell = btn.closest('.attr-cell');
+    const key = cell.dataset.attr;
+    const op = btn.dataset.op;
+    if (op === 'plus') {
+      if (state.attrs[key] < ATTR_MAX && attrTotal() < ATTR_BUDGET) state.attrs[key]++;
+    } else {
+      if (state.attrs[key] > ATTR_MIN) state.attrs[key]--;
+    }
+    updateAttrDisplay();
+  });
+
+  $('#btn-random').addEventListener('click', () => {
+    const keys = ['力量','敏捷','体质','智力','精神'];
+    const result = { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 };
+    let remaining = ATTR_BUDGET - 5;
+    while (remaining > 0) {
+      const candidates = keys.filter(k => result[k] < ATTR_MAX);
+      if (!candidates.length) break;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      result[pick]++;
+      remaining--;
+    }
+    state.attrs = result;
+    updateAttrDisplay();
+  });
+
+  $('#in-name').addEventListener('input', validateForm);
+  $('#in-appearance').addEventListener('input', validateForm);
+
+  $('#gender-group').addEventListener('click', e => {
+    const btn = e.target.closest('.gender-btn');
+    if (!btn) return;
+    $$('.gender-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.gender = btn.dataset.gender;
+  });
+
+  $$('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (state.sending || state.done) return;
+      const newMode = btn.dataset.mode;
+      if (state.mode === newMode) return;
+
+      $$('.mode-btn').forEach(b => b.style.pointerEvents = 'none');
+
+      try {
+        await switchNarrativeMode(newMode);
+        state.mode = newMode;
+        $$('.mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === newMode));
+        $('#mode-error').classList.remove('show');
+      } catch (err) {
+        console.warn('[init] switch mode failed', err);
+        const modeErr = $('#mode-error');
+        modeErr.textContent = '世界书切换失败，请重试';
+        modeErr.classList.add('show');
+      } finally {
+        $$('.mode-btn').forEach(b => b.style.pointerEvents = '');
+        validateForm();
+      }
+    });
+  });
+
+  async function switchNarrativeMode(targetMode) {
+    if (typeof getCharLorebooks !== 'function' ||
+        typeof getLorebookEntries !== 'function' ||
+        typeof replaceLorebookEntries !== 'function') {
+      throw new Error('lorebook API unavailable');
+    }
+    const books = await getCharLorebooks();
+    const bookName = books && books.primary;
+    if (!bookName) throw new Error('no primary worldbook');
+
+    const entries = await getLorebookEntries(bookName);
+    if (!Array.isArray(entries)) throw new Error('invalid entries');
+
+    const newEntries = entries.map(e => {
+      const uid = Number(e.uid);
+      if (uid === UID_剧情驱动) return { ...e, disable: targetMode !== '剧情驱动' };
+      if (uid === UID_沉浸驱动) return { ...e, disable: targetMode !== '沉浸驱动' };
+      return e;
+    });
+
+    await replaceLorebookEntries(bookName, newEntries);
+  }
+
+  async function switchPoolEntries(enable) {
+    if (typeof getCharLorebooks !== 'function' ||
+        typeof getLorebookEntries !== 'function' ||
+        typeof replaceLorebookEntries !== 'function') {
+      throw new Error('lorebook API unavailable');
+    }
+    const books = await getCharLorebooks();
+    const bookName = books && books.primary;
+    if (!bookName) throw new Error('no primary worldbook');
+
+    const entries = await getLorebookEntries(bookName);
+    if (!Array.isArray(entries)) throw new Error('invalid entries');
+
+    const newEntries = entries.map(e => {
+      const uid = Number(e.uid);
+      if (uid === UID_位面池) return { ...e, disable: !enable };
+      if (uid === UID_身份池) return { ...e, disable: !enable };
+      return e;
+    });
+
+    await replaceLorebookEntries(bookName, newEntries);
+  }
+
+  $('#btn-lottery').addEventListener('click', () => {
+    if (state.lottery || state.done) return;
+    const q1 = qualityByRoll(d20()), t1 = typeByRoll(d20());
+    const q2 = qualityByRoll(d20()), t2 = typeByRoll(d20());
+    const q3 = qualityByRoll(d20()), t3 = typeByRoll(d20());
+    state.lottery = {
+      weapon: { quality: q1, type: t1 },
+      consumable: { quality: q2, type: t2, count: 3 },
+      skill: { quality: q3, type: t3, level: skillLevelByQuality(q3) },
+    };
+    renderLottery();
+    $('#btn-lottery').disabled = true;
+  });
+
+  function renderLottery() {
+    const L = state.lottery;
+    if (!L) return;
+    const map = { weapon: L.weapon, consumable: L.consumable, skill: L.skill };
+    $$('.lottery-card').forEach(card => {
+      const slot = card.dataset.slot;
+      const data = map[slot];
+      if (!data) return;
+      card.classList.add('revealed', 'q-' + data.quality);
+      const tagsEl = card.querySelector('.lottery-tags');
+      tagsEl.innerHTML =
+        `<span class="lottery-tag quality-${data.quality}">${data.quality}</span>` +
+        `<span class="lottery-tag">${data.type}</span>` +
+        (slot === 'skill' ? `<span class="lottery-tag">${data.level}</span>` : '') +
+        (slot === 'consumable' ? `<span class="lottery-tag">×${data.count}</span>` : '');
+      const pending = card.querySelector('.lottery-pending');
+      if (pending) pending.textContent = '具体物品由主神生成';
+    });
+  }
+
+  $$('.choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const choice = btn.dataset.choice;
+      const value = btn.dataset.value;
+      if (state.done) return;
+      const group = document.querySelectorAll(`.choice-btn[data-choice="${choice}"]`);
+      group.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.querySelectorAll(`.choice-content[data-content^="${choice}-"]`).forEach(c => c.classList.remove('show'));
+      const target = document.querySelector(`.choice-content[data-content="${choice}-${value}"]`);
+      if (target) target.classList.add('show');
+      state[choice].choice = value;
+    });
+  });
+
+  $('#btn-draw-plane').addEventListener('click', () => {
+    if (state.plane.worldview || state.done) return;
+    state.plane.worldview = worldviewByRoll(d20());
+    state.plane.medium = mediumByRoll(d20());
+    $('#plane-worldview').textContent = state.plane.worldview;
+    $('#plane-medium').textContent = state.plane.medium;
+    $('#plane-result').style.display = 'block';
+    $('#btn-draw-plane').disabled = true;
+  });
+
+  $('#btn-draw-identity').addEventListener('click', () => {
+    if (state.identity.status || state.done) return;
+    state.identity.status = identityStatusByRoll(d20());
+    state.identity.talent = identityTalentByRoll(d20());
+    $('#identity-status').textContent = state.identity.status;
+    $('#identity-talent').textContent = state.identity.talent;
+    $('#identity-result').style.display = 'block';
+    $('#btn-draw-identity').disabled = true;
+  });
+
+  $('#toggle-pool').addEventListener('click', async () => {
+    if (state.sending || state.done) return;
+    const next = !state.poolEnabled;
+    $('#toggle-pool').style.pointerEvents = 'none';
+    try {
+      await switchPoolEntries(next);
+      state.poolEnabled = next;
+      $('#toggle-pool').classList.toggle('on', next);
+      $('#err-pool').classList.remove('show');
+    } catch (err) {
+      console.warn('[init] switch pool failed', err);
+      $('#err-pool').classList.add('show');
+    } finally {
+      $('#toggle-pool').style.pointerEvents = '';
+    }
+  });
+
+  function renderPreview() {
+    const L = state.lottery || {};
+    const p = state.plane;
+    const id = state.identity;
+    const preview = $('#preview-container');
+
+    let planeRows = '';
+    if (p.choice === 'draw' && p.worldview) {
+      planeRows = `
+        <div class="preview-row"><span class="k">世界观轴</span><span class="v">${esc(p.worldview)}</span></div>
+        <div class="preview-row"><span class="k">媒介轴</span><span class="v">${esc(p.medium)}</span></div>
+        <div class="preview-row"><span class="k">位面名</span><span class="v"></span></div>
+      `;
+    } else {
+      planeRows = `
+        <div class="preview-row"><span class="k">世界观轴</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">媒介轴</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">位面名</span><span class="v">${esc((p.name || '').trim())}</span></div>
+      `;
+    }
+
+    let identityRows = '';
+    if (id.choice === 'draw' && id.status) {
+      identityRows = `
+        <div class="preview-row"><span class="k">社会地位</span><span class="v">${esc(id.status)}</span></div>
+        <div class="preview-row"><span class="k">天赋</span><span class="v">${esc(id.talent)}</span></div>
+      `;
+    } else {
+      identityRows = `
+        <div class="preview-row"><span class="k">社会地位</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">天赋</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">身份描述</span><span class="v">${esc((id.name || '').trim())}</span></div>
+      `;
+    }
+
+    let lotteryRows = '';
+    if (L.weapon) {
+      lotteryRows = `
+        <div class="preview-row"><span class="k">武器</span><span class="v">${esc(L.weapon.quality)}品质，${esc(L.weapon.type)}类</span></div>
+        <div class="preview-row"><span class="k">消耗品</span><span class="v">${esc(L.consumable.quality)}品质，${esc(L.consumable.type)}类，数量 ${L.consumable.count}</span></div>
+        <div class="preview-row"><span class="k">永久技能</span><span class="v">${esc(L.skill.quality)}品质，${esc(L.skill.type)}类，等级 ${esc(L.skill.level)}</span></div>
+      `;
+    }
+
+    preview.innerHTML = `
+      <div class="preview-block">
+        <div class="form-block-title">玩家信息</div>
+        <div class="preview-row"><span class="k">姓名</span><span class="v">${esc(state.name)}</span></div>
+        <div class="preview-row"><span class="k">性别</span><span class="v">${esc(state.gender)}</span></div>
+        <div class="preview-row"><span class="k">外貌</span><span class="v">${esc(state.appearance)}</span></div>
+        <div class="preview-row"><span class="k">五维</span><span class="v">力量 ${state.attrs.力量}，敏捷 ${state.attrs.敏捷}，体质 ${state.attrs.体质}，智力 ${state.attrs.智力}，精神 ${state.attrs.精神}</span></div>
+        <div class="preview-row"><span class="k">叙事模式</span><span class="v">${esc(state.mode)}</span></div>
+      </div>
+      <div class="preview-block">
+        <div class="form-block-title">位面</div>
+        ${planeRows}
+      </div>
+      <div class="preview-block">
+        <div class="form-block-title">身份</div>
+        ${identityRows}
+      </div>
+      <div class="preview-block">
+        <div class="form-block-title">新手抽奖结果</div>
+        ${lotteryRows}
+      </div>
+    `;
+
+    $('#btn-next').textContent = '开始';
+    $('#btn-next').disabled = false;
+    $('#btn-next').onclick = startGame;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function startGame() {
+    if (state.sending || state.done) return;
+    state.sending = true;
+    const btn = $('#btn-next');
+    btn.disabled = true;
+    btn.textContent = '发送中…';
+
+    try {
+      await waitGlobalInitialized('Mvu').catch(() => {});
+
+      const mvuData = Mvu.getCurrentMvuData();
+      if (!mvuData) throw new Error('无法获取当前变量');
+      const derived = computeDerived(state.attrs);
+
+      _.set(mvuData, 'stat_data.轮回者.姓名', state.name);
+      _.set(mvuData, 'stat_data.轮回者.性别', state.gender);
+      _.set(mvuData, 'stat_data.轮回者.五维', {
+        力量: state.attrs.力量,
+        敏捷: state.attrs.敏捷,
+        体质: state.attrs.体质,
+        智力: state.attrs.智力,
+        精神: state.attrs.精神,
+      });
+      _.set(mvuData, 'stat_data.轮回者._派生', derived);
+      _.set(mvuData, 'stat_data.轮回者.当前HP', derived.hp上限);
+      _.set(mvuData, 'stat_data.轮回者.当前MP', derived.mp上限);
+      _.set(mvuData, 'stat_data.轮回者.当前SP', derived.sp上限);
+      _.set(mvuData, 'stat_data.轮回者.当前SAN', 100);
+
+      const mid = getCurrentMessageId();
+      await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: mid });
+
+      const template = buildTemplate();
+      await SillyTavern.sendMessage(template);
+
+      state.done = true;
+      $('#init-panel').classList.add('done');
+      $('#status-banner').classList.add('show');
+      btn.textContent = '轮回已开始';
+    } catch (err) {
+      console.error('[init] start failed', err);
+      state.sending = false;
+      btn.disabled = false;
+      btn.textContent = '重试发送';
+    }
+  }
+
+  function buildTemplate() {
+    const a = state.attrs;
+    const L = state.lottery || {};
+    const p = state.plane;
+    const id = state.identity;
+
+    const planeLine1 = p.choice === 'draw' && p.worldview ? `  世界观轴：${p.worldview}` : `  世界观轴：`;
+    const planeLine2 = p.choice === 'draw' && p.medium ? `  媒介轴：${p.medium}` : `  媒介轴：`;
+    const planeLine3 = p.choice === 'input' ? `  位面名：${(p.name || '').trim()}` : `  位面名：`;
+
+    let identityLine1, identityLine2;
+    if (id.choice === 'draw' && id.status) {
+      identityLine1 = `  社会地位：${id.status}`;
+      identityLine2 = `  天赋：${id.talent}`;
+    } else {
+      identityLine1 = `  社会地位：`;
+      identityLine2 = `  天赋：`;
+    }
+
+    const weaponLine = L.weapon ? `${L.weapon.quality}品质，${L.weapon.type}类` : '';
+    const consumableLine = L.consumable ? `${L.consumable.quality}品质，${L.consumable.type}类，数量 ${L.consumable.count}` : '';
+    const skillLine = L.skill ? `${L.skill.quality}品质，${L.skill.type}类，等级 ${L.skill.level}` : '';
+
+    return `以下是玩家信息：
+姓名：${state.name}
+性别：${state.gender}
+外貌：${state.appearance}
+五维：力量 ${a.力量}，敏捷 ${a.敏捷}，体质 ${a.体质}，智力 ${a.智力}，精神 ${a.精神}
+
+位面：
+${planeLine1}
+${planeLine2}
+${planeLine3}
+
+身份：
+${identityLine1}
+${identityLine2}
+
+新手抽奖结果：
+武器：${weaponLine}
+消耗品：${consumableLine}
+永久技能：${skillLine}
+
+请生成符合信息内容的开场，并完成以下事项：
+1. 根据抽奖结果为玩家生成三件具体物品，物品必须来自真实存在的 ACG 作品，标注具体作品来源。
+2. 武器写入当前装备的主武器槽。
+3. 消耗品写入持有物品，数量 3。
+4. 技能写入永久技能。
+5. 位面与身份部分空白字段视为无意义信息。`;
+  }
+
+  $('#btn-prev').addEventListener('click', () => goPage(state.page - 1));
+  $('#btn-next').addEventListener('click', () => {
+    if (state.page === TOTAL_PAGES - 2) {
+      renderPreview();
+      return;
+    }
+    if (state.page === TOTAL_PAGES - 1) {
+      startGame();
+      return;
+    }
+    goPage(state.page + 1);
+  });
+
+  updateAttrDisplay();
+  goPage(0);
+})();
+</script>
+</body>
+</html>
