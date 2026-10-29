@@ -1025,9 +1025,6 @@ html, body {
     if (r <= 16) return '现代/现实';
     return '神话/传说';
   }
-  function skillLevelByQuality(q) {
-    return q === '普通' ? '一级' : q === '精良' ? '二级' : '三级';
-  }
   function worldviewByRoll(r) {
     if (r <= 2) return '现代现实';
     if (r <= 5) return '现代奇幻';
@@ -1302,7 +1299,7 @@ html, body {
     state.lottery = {
       weapon: { quality: q1, type: t1 },
       consumable: { quality: q2, type: t2, count: 3 },
-      skill: { quality: q3, type: t3, level: skillLevelByQuality(q3) },
+      skill: { quality: q3, type: t3 },
     };
     renderLottery();
     $('#btn-lottery').disabled = true;
@@ -1321,12 +1318,19 @@ html, body {
       tagsEl.innerHTML =
         `<span class="lottery-tag quality-${data.quality}">${data.quality}</span>` +
         `<span class="lottery-tag">${data.type}</span>` +
-        (slot === 'skill' ? `<span class="lottery-tag">${data.level}</span>` : '') +
         (slot === 'consumable' ? `<span class="lottery-tag">×${data.count}</span>` : '');
       const pending = card.querySelector('.lottery-pending');
       if (pending) pending.textContent = '具体物品由主神生成';
     });
   }
+
+  $('#in-plane-name').addEventListener('input', () => {
+    state.plane.name = $('#in-plane-name').value;
+  });
+
+  $('#in-identity-name').addEventListener('input', () => {
+    state.identity.name = $('#in-identity-name').value;
+  });
 
   $$('.choice-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1340,6 +1344,32 @@ html, body {
       const target = document.querySelector(`.choice-content[data-content="${choice}-${value}"]`);
       if (target) target.classList.add('show');
       state[choice].choice = value;
+
+      if (choice === 'plane') {
+        if (value === 'draw') {
+          state.plane.name = '';
+          $('#in-plane-name').value = '';
+        } else {
+          state.plane.worldview = '';
+          state.plane.medium = '';
+          state.plane.tone = '';
+          $('#plane-result').style.display = 'none';
+          $('#btn-draw-plane').disabled = false;
+        }
+      }
+      if (choice === 'identity') {
+        if (value === 'draw') {
+          state.identity.name = '';
+          $('#in-identity-name').value = '';
+        } else {
+          state.identity.economy = '';
+          state.identity.power = '';
+          state.identity.reputation = '';
+          state.identity.background = '';
+          $('#identity-result').style.display = 'none';
+          $('#btn-draw-identity').disabled = false;
+        }
+      }
     });
   });
 
@@ -1447,7 +1477,7 @@ html, body {
       lotteryRows = `
         <div class="preview-row"><span class="k">武器</span><span class="v">${esc(L.weapon.quality)}品质，${esc(L.weapon.type)}类</span></div>
         <div class="preview-row"><span class="k">消耗品</span><span class="v">${esc(L.consumable.quality)}品质，${esc(L.consumable.type)}类，数量 ${L.consumable.count}</span></div>
-        <div class="preview-row"><span class="k">永久技能</span><span class="v">${esc(L.skill.quality)}品质，${esc(L.skill.type)}类，等级 ${esc(L.skill.level)}</span></div>
+        <div class="preview-row"><span class="k">永久技能</span><span class="v">${esc(L.skill.quality)}品质，${esc(L.skill.type)}类</span></div>
       `;
     }
 
@@ -1573,7 +1603,7 @@ html, body {
 
     const weaponLine = L.weapon ? `${L.weapon.quality}品质，${L.weapon.type}类` : '';
     const consumableLine = L.consumable ? `${L.consumable.quality}品质，${L.consumable.type}类，数量 ${L.consumable.count}` : '';
-    const skillLine = L.skill ? `${L.skill.quality}品质，${L.skill.type}类，等级 ${L.skill.level}` : '';
+    const skillLine = L.skill ? `${L.skill.quality}品质，${L.skill.type}类` : '';
 
     return `以下是玩家信息：
 姓名：${state.name}
