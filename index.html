@@ -798,7 +798,7 @@ html, body {
           </div>
 
           <div class="field">
-            <label class="field-label">外貌</label>
+            <label class="field-label">外貌（非必选）</label>
             <textarea class="field-textarea" id="in-appearance" placeholder="" maxlength="200"></textarea>
           </div>
         </div>
@@ -906,7 +906,7 @@ html, body {
         </div>
 
         <div class="subsection" data-section="plane">
-          <div class="subsection-title">位面</div>
+          <div class="subsection-title">位面（必选）</div>
           <div class="choice-row">
             <div class="choice-btn selected" data-choice="plane" data-value="draw">抽取</div>
             <div class="choice-btn" data-choice="plane" data-value="input">输入</div>
@@ -916,6 +916,7 @@ html, body {
             <div class="result-box" id="plane-result" style="display:none;margin-top:10px;">
               <div class="row"><span class="k">世界观轴</span><span class="v" id="plane-worldview">—</span></div>
               <div class="row"><span class="k">媒介轴</span><span class="v" id="plane-medium">—</span></div>
+              <div class="row"><span class="k">基调轴</span><span class="v" id="plane-tone">—</span></div>
             </div>
           </div>
           <div class="choice-content" data-content="plane-input">
@@ -924,7 +925,7 @@ html, body {
         </div>
 
         <div class="subsection" data-section="identity">
-          <div class="subsection-title">身份</div>
+          <div class="subsection-title">身份（非必选）</div>
           <div class="choice-row">
             <div class="choice-btn selected" data-choice="identity" data-value="draw">抽取</div>
             <div class="choice-btn" data-choice="identity" data-value="input">输入</div>
@@ -932,20 +933,28 @@ html, body {
           <div class="choice-content show" data-content="identity-draw">
             <button class="nav-btn primary" id="btn-draw-identity" style="width:100%;">执行分配</button>
             <div class="result-box" id="identity-result" style="display:none;margin-top:10px;">
-              <div class="row"><span class="k">社会地位</span><span class="v" id="identity-status">—</span></div>
-              <div class="row"><span class="k">天赋</span><span class="v" id="identity-talent">—</span></div>
+              <div class="row"><span class="k">经济</span><span class="v" id="identity-economy">—</span></div>
+              <div class="row"><span class="k">权力</span><span class="v" id="identity-power">—</span></div>
+              <div class="row"><span class="k">声望</span><span class="v" id="identity-reputation">—</span></div>
+              <div class="row"><span class="k">先赋</span><span class="v" id="identity-background">—</span></div>
             </div>
           </div>
           <div class="choice-content" data-content="identity-input">
-            <input type="text" class="field-input" id="in-identity-name" placeholder="输入身份描述" autocomplete="off">
+            <input type="text" class="field-input" id="in-identity-name" placeholder="输入身份描述（非必选）" autocomplete="off">
           </div>
         </div>
 
         <div class="toggle-row">
-          <div class="toggle-label">启用位面池与身份池条目（影响之后的位面选择）</div>
-          <div class="toggle-switch" id="toggle-pool"></div>
+          <div class="toggle-label">启用位面池。可能会随机出小众作品，若想要指定作品请关闭，并在之后进入位面时手动输入目标位面。</div>
+          <div class="toggle-switch on" id="toggle-plane-pool"></div>
         </div>
-        <div class="field-error" id="err-pool">世界书切换失败，请重试或手动在 ST 世界书面板中启用对应条目</div>
+        <div class="field-error" id="err-plane-pool">世界书切换失败，请重试或手动在 ST 世界书面板中启用对应条目</div>
+
+        <div class="toggle-row">
+          <div class="toggle-label">启用身份池。可能会随机出各种身份，若想要指定身份或体验完全无背景请关闭，并手动输入想要身份或留空。</div>
+          <div class="toggle-switch on" id="toggle-identity-pool"></div>
+        </div>
+        <div class="field-error" id="err-identity-pool">世界书切换失败，请重试或手动在 ST 世界书面板中启用对应条目</div>
       </div>
 
       <div class="page" data-page="5">
@@ -978,25 +987,24 @@ html, body {
     attrs: { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 },
     mode: '',
     lottery: null,
-    plane: { choice: 'draw', worldview: '', medium: '', name: '' },
-    identity: { choice: 'draw', status: '', talent: '', name: '' },
-    poolEnabled: false,
+    plane: { choice: 'draw', worldview: '', medium: '', tone: '', name: '' },
+    identity: { choice: 'draw', economy: '', power: '', reputation: '', background: '', name: '' },
+    poolEnabled: { plane: true, identity: true },
     sending: false,
     done: false,
   };
 
   const TOTAL_PAGES = 6;
 
-  // 可分配点数：不含基础值（5 个属性各 1 = 基础 5 点，额外 10 点自由分配）
   const ATTR_BUDGET = 10;
   const ATTR_BASE = 5;
   const ATTR_MAX = 8;
   const ATTR_MIN = 1;
 
-  // 世界书目标条目 —— 按名字 includes 匹配
   const WB_TARGETS = {
     mode: ['剧情驱动', '沉浸驱动'],
-    pool: ['位面池', '身份池'],
+    planePool: ['位面池'],
+    identityPool: ['身份池'],
   };
 
   const $ = sel => document.querySelector(sel);
@@ -1036,17 +1044,37 @@ html, body {
     if (r <= 19) return '轻小说';
     return '电影或其他';
   }
-  function identityStatusByRoll(r) {
-    if (r <= 3) return '底层';
-    if (r <= 11) return '普通';
-    if (r <= 17) return '中上';
-    return '上层';
+  function toneByRoll(r) {
+    if (r <= 2) return '日常喜剧恋爱';
+    if (r <= 9) return '热血王道';
+    if (r <= 13) return '悬疑智斗';
+    if (r <= 16) return '史诗宏大';
+    if (r <= 19) return '黑暗沉重';
+    return '恐怖诡异';
   }
-  function identityTalentByRoll(r) {
-    if (r <= 3) return '极差';
-    if (r <= 11) return '普通';
-    if (r <= 17) return '优秀';
-    return '天才';
+  function identityEconomyByRoll(r) {
+    if (r <= 4) return '赤贫';
+    if (r <= 12) return '温饱';
+    if (r <= 18) return '小康';
+    return '富足';
+  }
+  function identityPowerByRoll(r) {
+    if (r <= 6) return '无权';
+    if (r <= 13) return '有门路';
+    if (r <= 18) return '有话语权';
+    return '掌权';
+  }
+  function identityReputationByRoll(r) {
+    if (r <= 4) return '恶名';
+    if (r <= 12) return '无名';
+    if (r <= 18) return '清名';
+    return '盛名';
+  }
+  function identityBackgroundByRoll(r) {
+    if (r <= 5) return '卑贱';
+    if (r <= 12) return '平民';
+    if (r <= 18) return '殷实';
+    return '显赫';
   }
 
   function computeRankByLv(lv) {
@@ -1091,7 +1119,7 @@ html, body {
   }
 
   function attrUsed() {
-    return attrTotal() - ATTR_BASE;  // 已分配的可加点（不含基础 5 点）
+    return attrTotal() - ATTR_BASE;
   }
 
   function goPage(index) {
@@ -1100,8 +1128,8 @@ html, body {
     state.page = index;
     $$('.page').forEach(p => p.classList.toggle('active', Number(p.dataset.page) === index));
     $('#btn-prev').disabled = index === 0 || state.done;
-    $('#btn-next').disabled = index === TOTAL_PAGES - 1 || state.done;
-    $('#btn-next').textContent = index === TOTAL_PAGES - 2 ? '前往确认' : '下一页';
+    $('#btn-next').disabled = state.done;
+    $('#btn-next').textContent = index === TOTAL_PAGES - 1 ? '开始' : (index === TOTAL_PAGES - 2 ? '前往确认' : '下一页');
     $('#page-indicator').textContent = (index + 1) + ' / ' + TOTAL_PAGES;
 
     if (index === TOTAL_PAGES - 1) renderPreview();
@@ -1117,8 +1145,6 @@ html, body {
     if (page === 4) {
       if (state.plane.choice === 'draw' && !state.plane.worldview) return false;
       if (state.plane.choice === 'input' && !state.plane.name.trim()) return false;
-      if (state.identity.choice === 'draw' && !state.identity.status) return false;
-      if (state.identity.choice === 'input' && !state.identity.name.trim()) return false;
       return true;
     }
     return true;
@@ -1173,7 +1199,7 @@ html, body {
   $('#btn-random').addEventListener('click', () => {
     const keys = ['力量','敏捷','体质','智力','精神'];
     const result = { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 };
-    let remaining = ATTR_BUDGET;  // 10 点自由分配（不含基础）
+    let remaining = ATTR_BUDGET;
     while (remaining > 0) {
       const candidates = keys.filter(k => result[k] < ATTR_MAX);
       if (!candidates.length) break;
@@ -1229,16 +1255,20 @@ html, body {
     if (others.length) await applyEntries(e => nameHit(e, others), false);
   }
 
-  async function switchPoolEntries(enable) {
-    await applyEntries(e => nameHit(e, WB_TARGETS.pool), enable);
+  async function switchPlanePoolEntries(enable) {
+    await applyEntries(e => nameHit(e, WB_TARGETS.planePool), enable);
   }
 
-  function showLorebookError(err) {
+  async function switchIdentityPoolEntries(enable) {
+    await applyEntries(e => nameHit(e, WB_TARGETS.identityPool), enable);
+  }
+
+  function showLorebookError(err, targetId) {
     const msg = '世界书切换失败：' + (err?.message || err?.toString?.() || '未知错误');
     console.error('[init]', msg, err);
     const a = document.querySelector('#mode-error');
     if (a) { a.textContent = msg; a.classList.add('show'); }
-    const b = document.querySelector('#err-pool');
+    const b = document.querySelector('#' + (targetId || 'err-plane-pool'));
     if (b) { b.textContent = msg; b.classList.add('show'); }
   }
 
@@ -1317,35 +1347,57 @@ html, body {
     if (state.plane.worldview || state.done) return;
     state.plane.worldview = worldviewByRoll(d20());
     state.plane.medium = mediumByRoll(d20());
+    state.plane.tone = toneByRoll(d20());
     $('#plane-worldview').textContent = state.plane.worldview;
     $('#plane-medium').textContent = state.plane.medium;
+    $('#plane-tone').textContent = state.plane.tone;
     $('#plane-result').style.display = 'block';
     $('#btn-draw-plane').disabled = true;
   });
 
   $('#btn-draw-identity').addEventListener('click', () => {
-    if (state.identity.status || state.done) return;
-    state.identity.status = identityStatusByRoll(d20());
-    state.identity.talent = identityTalentByRoll(d20());
-    $('#identity-status').textContent = state.identity.status;
-    $('#identity-talent').textContent = state.identity.talent;
+    if (state.identity.economy || state.done) return;
+    state.identity.economy = identityEconomyByRoll(d20());
+    state.identity.power = identityPowerByRoll(d20());
+    state.identity.reputation = identityReputationByRoll(d20());
+    state.identity.background = identityBackgroundByRoll(d20());
+    $('#identity-economy').textContent = state.identity.economy;
+    $('#identity-power').textContent = state.identity.power;
+    $('#identity-reputation').textContent = state.identity.reputation;
+    $('#identity-background').textContent = state.identity.background;
     $('#identity-result').style.display = 'block';
     $('#btn-draw-identity').disabled = true;
   });
 
-  $('#toggle-pool').addEventListener('click', async () => {
+  $('#toggle-plane-pool').addEventListener('click', async () => {
     if (state.sending || state.done) return;
-    const next = !state.poolEnabled;
-    $('#toggle-pool').style.pointerEvents = 'none';
+    const next = !state.poolEnabled.plane;
+    $('#toggle-plane-pool').style.pointerEvents = 'none';
     try {
-      await switchPoolEntries(next);
-      state.poolEnabled = next;
-      $('#toggle-pool').classList.toggle('on', next);
-      $('#err-pool').classList.remove('show');
+      await switchPlanePoolEntries(next);
+      state.poolEnabled.plane = next;
+      $('#toggle-plane-pool').classList.toggle('on', next);
+      $('#err-plane-pool').classList.remove('show');
     } catch (err) {
-      showLorebookError(err);
+      showLorebookError(err, 'err-plane-pool');
     } finally {
-      $('#toggle-pool').style.pointerEvents = '';
+      $('#toggle-plane-pool').style.pointerEvents = '';
+    }
+  });
+
+  $('#toggle-identity-pool').addEventListener('click', async () => {
+    if (state.sending || state.done) return;
+    const next = !state.poolEnabled.identity;
+    $('#toggle-identity-pool').style.pointerEvents = 'none';
+    try {
+      await switchIdentityPoolEntries(next);
+      state.poolEnabled.identity = next;
+      $('#toggle-identity-pool').classList.toggle('on', next);
+      $('#err-identity-pool').classList.remove('show');
+    } catch (err) {
+      showLorebookError(err, 'err-identity-pool');
+    } finally {
+      $('#toggle-identity-pool').style.pointerEvents = '';
     }
   });
 
@@ -1360,26 +1412,32 @@ html, body {
       planeRows = `
         <div class="preview-row"><span class="k">世界观轴</span><span class="v">${esc(p.worldview)}</span></div>
         <div class="preview-row"><span class="k">媒介轴</span><span class="v">${esc(p.medium)}</span></div>
+        <div class="preview-row"><span class="k">基调轴</span><span class="v">${esc(p.tone)}</span></div>
         <div class="preview-row"><span class="k">位面名</span><span class="v"></span></div>
       `;
     } else {
       planeRows = `
         <div class="preview-row"><span class="k">世界观轴</span><span class="v"></span></div>
         <div class="preview-row"><span class="k">媒介轴</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">基调轴</span><span class="v"></span></div>
         <div class="preview-row"><span class="k">位面名</span><span class="v">${esc((p.name || '').trim())}</span></div>
       `;
     }
 
     let identityRows = '';
-    if (id.choice === 'draw' && id.status) {
+    if (id.choice === 'draw' && id.economy) {
       identityRows = `
-        <div class="preview-row"><span class="k">社会地位</span><span class="v">${esc(id.status)}</span></div>
-        <div class="preview-row"><span class="k">天赋</span><span class="v">${esc(id.talent)}</span></div>
+        <div class="preview-row"><span class="k">经济</span><span class="v">${esc(id.economy)}</span></div>
+        <div class="preview-row"><span class="k">权力</span><span class="v">${esc(id.power)}</span></div>
+        <div class="preview-row"><span class="k">声望</span><span class="v">${esc(id.reputation)}</span></div>
+        <div class="preview-row"><span class="k">先赋</span><span class="v">${esc(id.background)}</span></div>
       `;
     } else {
       identityRows = `
-        <div class="preview-row"><span class="k">社会地位</span><span class="v"></span></div>
-        <div class="preview-row"><span class="k">天赋</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">经济</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">权力</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">声望</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">先赋</span><span class="v"></span></div>
         <div class="preview-row"><span class="k">身份描述</span><span class="v">${esc((id.name || '').trim())}</span></div>
       `;
     }
@@ -1415,10 +1473,6 @@ html, body {
         ${lotteryRows}
       </div>
     `;
-
-    $('#btn-next').textContent = '开始';
-    $('#btn-next').disabled = false;
-    $('#btn-next').onclick = startGame;
   }
 
   function esc(s) {
@@ -1435,7 +1489,6 @@ html, body {
     try {
       const th = TH();
 
-      // 等 Mvu 就绪（优先全局，回退 TH 挂载）
       if (typeof window.waitGlobalInitialized === 'function') {
         await window.waitGlobalInitialized('Mvu').catch(() => {});
       } else if (typeof th.waitGlobalInitialized === 'function') {
@@ -1447,7 +1500,6 @@ html, body {
       if (typeof M.getMvuData !== 'function') throw new Error('Mvu.getMvuData 不可用');
       if (typeof M.replaceMvuData !== 'function') throw new Error('Mvu.replaceMvuData 不可用');
 
-      // 直接用 'latest'（避免 getLastMessageId 返回数组的兼容问题）
       const msgId = 'latest';
 
       let data = await M.getMvuData({ type: 'message', message_id: msgId });
@@ -1466,7 +1518,6 @@ html, body {
 
       await M.replaceMvuData(data, { type: 'message', message_id: msgId });
 
-      // 发送消息走 TH
       const template = buildTemplate();
       if (typeof th.createChatMessages !== 'function') {
         throw new Error('TH.createChatMessages 不可用');
@@ -1501,15 +1552,23 @@ html, body {
 
     const planeLine1 = p.choice === 'draw' && p.worldview ? `  世界观轴：${p.worldview}` : `  世界观轴：`;
     const planeLine2 = p.choice === 'draw' && p.medium ? `  媒介轴：${p.medium}` : `  媒介轴：`;
-    const planeLine3 = p.choice === 'input' ? `  位面名：${(p.name || '').trim()}` : `  位面名：`;
+    const planeLine3 = p.choice === 'draw' && p.tone ? `  基调轴：${p.tone}` : `  基调轴：`;
+    const planeLine4 = p.choice === 'input' ? `  位面名：${(p.name || '').trim()}` : `  位面名：`;
 
-    let identityLine1, identityLine2;
-    if (id.choice === 'draw' && id.status) {
-      identityLine1 = `  社会地位：${id.status}`;
-      identityLine2 = `  天赋：${id.talent}`;
+    let identityLine1, identityLine2, identityLine3, identityLine4, identityLine5 = '';
+    if (id.choice === 'draw' && id.economy) {
+      identityLine1 = `  经济：${id.economy}`;
+      identityLine2 = `  权力：${id.power}`;
+      identityLine3 = `  声望：${id.reputation}`;
+      identityLine4 = `  先赋：${id.background}`;
     } else {
-      identityLine1 = `  社会地位：`;
-      identityLine2 = `  天赋：`;
+      identityLine1 = `  经济：`;
+      identityLine2 = `  权力：`;
+      identityLine3 = `  声望：`;
+      identityLine4 = `  先赋：`;
+      if (id.choice === 'input' && (id.name || '').trim()) {
+        identityLine5 = `\n  身份描述：${id.name.trim()}`;
+      }
     }
 
     const weaponLine = L.weapon ? `${L.weapon.quality}品质，${L.weapon.type}类` : '';
@@ -1526,10 +1585,13 @@ html, body {
 ${planeLine1}
 ${planeLine2}
 ${planeLine3}
+${planeLine4}
 
 身份：
 ${identityLine1}
 ${identityLine2}
+${identityLine3}
+${identityLine4}${identityLine5}
 
 新手抽奖结果：
 武器：${weaponLine}
@@ -1537,7 +1599,7 @@ ${identityLine2}
 永久技能：${skillLine}
 
 请生成符合信息内容的开场，并完成以下事项：
-1. 根据抽奖结果为玩家生成三件具体物品，物品必须来自真实存在的 ACG 作品，标注具体作品来源。
+1. 根据抽奖结果为玩家生成三件具体物品，物品必须来自真实存在的虚构作品，标注具体作品来源。
 2. 武器写入当前装备的主武器槽。
 3. 消耗品写入持有物品，数量 3。
 4. 技能写入永久技能。
@@ -1546,10 +1608,6 @@ ${identityLine2}
 
   $('#btn-prev').addEventListener('click', () => goPage(state.page - 1));
   $('#btn-next').addEventListener('click', () => {
-    if (state.page === TOTAL_PAGES - 2) {
-      renderPreview();
-      return;
-    }
     if (state.page === TOTAL_PAGES - 1) {
       startGame();
       return;
@@ -1559,6 +1617,13 @@ ${identityLine2}
 
   updateAttrDisplay();
   goPage(0);
+
+  (async () => {
+    try { await switchPlanePoolEntries(true); }
+    catch (err) { console.warn('[init] plane pool init failed', err); }
+    try { await switchIdentityPoolEntries(true); }
+    catch (err) { console.warn('[init] identity pool init failed', err); }
+  })();
 })();
 </script>
 </body>
