@@ -915,7 +915,7 @@ html, body {
             <button class="nav-btn primary" id="btn-draw-plane" style="width:100%;">执行分配</button>
             <div class="result-box" id="plane-result" style="display:none;margin-top:10px;">
               <div class="row"><span class="k">世界观轴</span><span class="v" id="plane-worldview">—</span></div>
-              <div class="row"><span class="k">媒介轴</span><span class="v" id="plane-medium">—</span></div>
+              <div class="row"><span class="k">内容轴</span><span class="v" id="plane-content">—</span></div>
               <div class="row"><span class="k">基调轴</span><span class="v" id="plane-tone">—</span></div>
             </div>
           </div>
@@ -987,7 +987,7 @@ html, body {
     attrs: { 力量: 1, 敏捷: 1, 体质: 1, 智力: 1, 精神: 1 },
     mode: '',
     lottery: null,
-    plane: { choice: 'draw', worldview: '', medium: '', tone: '', name: '' },
+    plane: { choice: 'draw', worldview: '', content: '', tone: '', name: '' },
     identity: { choice: 'draw', economy: '', power: '', reputation: '', background: '', name: '' },
     poolEnabled: { plane: true, identity: true },
     sending: false,
@@ -1034,12 +1034,12 @@ html, body {
     if (r <= 19) return '历史';
     return '末世废土';
   }
-  function mediumByRoll(r) {
-    if (r <= 6) return '动画';
-    if (r <= 12) return '游戏';
-    if (r <= 16) return '漫画';
-    if (r <= 19) return '轻小说';
-    return '电影或其他';
+  function contentByRoll(r) {
+    if (r <= 5) return '日常';
+    if (r <= 11) return '冒险';
+    if (r <= 13) return '经营';
+    if (r <= 17) return '社会';
+    return '博弈';
   }
   function toneByRoll(r) {
     if (r <= 2) return '日常喜剧恋爱';
@@ -1351,7 +1351,7 @@ html, body {
           $('#in-plane-name').value = '';
         } else {
           state.plane.worldview = '';
-          state.plane.medium = '';
+          state.plane.content = '';
           state.plane.tone = '';
           $('#plane-result').style.display = 'none';
           $('#btn-draw-plane').disabled = false;
@@ -1376,10 +1376,10 @@ html, body {
   $('#btn-draw-plane').addEventListener('click', () => {
     if (state.plane.worldview || state.done) return;
     state.plane.worldview = worldviewByRoll(d20());
-    state.plane.medium = mediumByRoll(d20());
+    state.plane.content = contentByRoll(d20());
     state.plane.tone = toneByRoll(d20());
     $('#plane-worldview').textContent = state.plane.worldview;
-    $('#plane-medium').textContent = state.plane.medium;
+    $('#plane-content').textContent = state.plane.content;
     $('#plane-tone').textContent = state.plane.tone;
     $('#plane-result').style.display = 'block';
     $('#btn-draw-plane').disabled = true;
@@ -1441,14 +1441,14 @@ html, body {
     if (p.choice === 'draw' && p.worldview) {
       planeRows = `
         <div class="preview-row"><span class="k">世界观轴</span><span class="v">${esc(p.worldview)}</span></div>
-        <div class="preview-row"><span class="k">媒介轴</span><span class="v">${esc(p.medium)}</span></div>
+        <div class="preview-row"><span class="k">内容轴</span><span class="v">${esc(p.content)}</span></div>
         <div class="preview-row"><span class="k">基调轴</span><span class="v">${esc(p.tone)}</span></div>
         <div class="preview-row"><span class="k">位面名</span><span class="v"></span></div>
       `;
     } else {
       planeRows = `
         <div class="preview-row"><span class="k">世界观轴</span><span class="v"></span></div>
-        <div class="preview-row"><span class="k">媒介轴</span><span class="v"></span></div>
+        <div class="preview-row"><span class="k">内容轴</span><span class="v"></span></div>
         <div class="preview-row"><span class="k">基调轴</span><span class="v"></span></div>
         <div class="preview-row"><span class="k">位面名</span><span class="v">${esc((p.name || '').trim())}</span></div>
       `;
@@ -1581,7 +1581,7 @@ html, body {
     const id = state.identity;
 
     const planeLine1 = p.choice === 'draw' && p.worldview ? `  世界观轴：${p.worldview}` : `  世界观轴：`;
-    const planeLine2 = p.choice === 'draw' && p.medium ? `  媒介轴：${p.medium}` : `  媒介轴：`;
+    const planeLine2 = p.choice === 'draw' && p.content ? `  内容轴：${p.content}` : `  内容轴：`;
     const planeLine3 = p.choice === 'draw' && p.tone ? `  基调轴：${p.tone}` : `  基调轴：`;
     const planeLine4 = p.choice === 'input' ? `  位面名：${(p.name || '').trim()}` : `  位面名：`;
 
@@ -1628,14 +1628,6 @@ ${identityLine4}${identityLine5}
 消耗品：${consumableLine}
 永久技能：${skillLine}
 
-<开场叙事要求>
-
-环境：轮回者落地那一刻所处的环境。光、温度、声音、气味、脚下的质地、空气的干湿，至少写到四项。
-身体：轮回者落到这里时的身体反应——呼吸、平衡、皮肤的感觉、手里的东西、身上的重量。
-处境：轮回者此刻能确认的事：他在哪一类地方、周围有没有人、身上有什么、接下来最直接的问题是什么。
-氛围：整段描写被同一种气氛统摄，气氛由具体可感的东西承载，与位面本身的基调相符，不直接命名情绪。
-重心：开场的叙事重心由叙事模式决定。剧情驱动，重心落在故事上，让轮回者接触到与某条故事线相关的信号；沉浸驱动，重心落在世界上，写周围此刻还在发生什么，把去向留给轮回者自己决定。
-缓冲：不把剧情钩子直接递到轮回者眼前。不出现任何把轮回者往事件上拉的动作，先给他一段适应这个世界的缓冲。缓冲的长度由模式决定，沉浸驱动长一些，剧情驱动短一些。
 
 <内容要求>
 即将进入新位面，请生成符合信息内容的开场，并完成以下事项：
