@@ -1019,11 +1019,13 @@ html, body {
     return '稀有';
   }
   function typeByRoll(r) {
-    if (r <= 4) return '魔法/奇幻';
-    if (r <= 8) return '科技/科幻';
-    if (r <= 12) return '武侠/仙侠';
-    if (r <= 16) return '现代/现实';
-    return '神话/传说';
+    if (r <= 2) return '现代现实';
+    if (r <= 5) return '现代奇幻';
+    if (r <= 9) return '仙侠';
+    if (r <= 14) return '西幻';
+    if (r <= 17) return '未来科幻';
+    if (r <= 19) return '历史';
+    return '末世废土';
   }
   function worldviewByRoll(r) {
     if (r <= 2) return '现代现实';
