@@ -1041,14 +1041,15 @@ html, body {
     if (r <= 17) return '社会';
     return '博弈';
   }
-  function toneByRoll(r) {
-    if (r <= 2) return '日常喜剧恋爱';
-    if (r <= 9) return '热血王道';
-    if (r <= 13) return '悬疑智斗';
-    if (r <= 16) return '史诗宏大';
-    if (r <= 19) return '黑暗沉重';
-    return '恐怖诡异';
-  }
+function toneByRoll(r) {
+  if (r <= 4) return '轻松';
+  if (r <= 7) return '欢乐';
+  if (r === 8) return '温馨';
+  if (r <= 12) return '热血';
+  if (r <= 16) return '严肃';
+  if (r <= 19) return '黑暗';
+  return '恐怖';
+}
   function identityEconomyByRoll(r) {
     if (r <= 4) return '赤贫';
     if (r <= 12) return '温饱';
