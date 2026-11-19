@@ -1608,6 +1608,20 @@ function toneByRoll(r) {
     const consumableLine = L.consumable ? `${L.consumable.quality}品质，${L.consumable.type}类，数量 ${L.consumable.count}` : '';
     const skillLine = L.skill ? `${L.skill.quality}品质，${L.skill.type}类` : '';
 
+        let modePrompt = '';
+
+    if (state.mode === '剧情驱动') {
+      modePrompt = `
+<剧情驱动模式>
+当前驱动模式为剧情驱动，请在开场递给玩家一个剧情钩子。
+</剧情驱动模式>`;
+    } else if (state.mode === '沉浸驱动') {
+      modePrompt = `
+<沉浸驱动模式>
+当前驱动模式为沉浸驱动，请在开场专注于描写世界本身的氛围和质感。
+</沉浸驱动模式>`;
+    }
+    
     return `以下是玩家信息：
 姓名：${state.name}
 性别：${state.gender}
@@ -1631,6 +1645,7 @@ ${identityLine4}${identityLine5}
 消耗品：${consumableLine}
 永久技能：${skillLine}
 
+${modePrompt}
 
 <内容要求>
 即将进入新位面，请生成符合信息内容的开场，并完成以下事项：
